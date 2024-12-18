@@ -1,14 +1,19 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 
 class Bet(BaseModel):
     team: str
-    bet_type: str  # ML, spread, over/under
-    odds: float
-    details: dict  # Additional details like spread value, etc.
+    opponent: str
+    bet_type: str
+    odds: int
+    details: Dict = {}
+
+class ParlayBet(BaseModel):
+    total_odds: int
+    individual_bets: List[Bet]
 
 class ParlayAnalysisRequest(BaseModel):
-    bets: List[Bet]
+    parlay: ParlayBet
     wallet_address: str
 
 class BetAnalysis(BaseModel):
@@ -19,4 +24,4 @@ class BetAnalysis(BaseModel):
 class ParlayAnalysisResponse(BaseModel):
     overall_score: int
     individual_analyses: List[BetAnalysis]
-    should_show_solana: bool  # True if overall confidence is low
+    should_show_solana: bool
