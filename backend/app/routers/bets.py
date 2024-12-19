@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, UploadFile, Form, File
 from typing import List
+import asyncio
 from ..models.bet import (
     ParlayAnalysisRequest, 
     ParlayAnalysisResponse, 
@@ -7,6 +8,7 @@ from ..models.bet import (
     ParlayBet  # Add this import
 )
 from ..services.analyzer import BetAnalyzer
+from ..services.nfl_client import NFLClient
 from ..services.image_processor import ImageProcessor  # Add this
 from ..database import Database
 
@@ -38,11 +40,11 @@ async def analyze_bet_image(
 @router.post("/analyze", response_model=ParlayAnalysisResponse)
 async def analyze_parlay(request: ParlayAnalysisRequest):
     try:
-        # Analyze each bet in the parlay
-        individual_analyses = [
+        # Analyze each bet in the parlay - use asyncio.gather to handle multiple async calls
+        individual_analyses = await asyncio.gather(*[
             analyzer.analyze_bet(bet) 
             for bet in request.parlay.individual_bets
-        ]
+        ])
         
         overall_score = analyzer.calculate_overall_confidence(individual_analyses)
         show_solana = analyzer.should_suggest_solana(overall_score)
